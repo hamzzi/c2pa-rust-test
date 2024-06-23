@@ -1,4 +1,7 @@
-use std::io::{Cursor, Seek};
+use std::{
+    fs::File,
+    io::{self, Cursor, Seek},
+};
 
 use anyhow::Result;
 use c2pa::{settings::load_settings_from_str, Builder, CallbackSigner, Reader, SigningAlg};
@@ -23,12 +26,7 @@ fn manifest_def(title: &str, format: &str) -> String {
             "identifier": "manifest_thumbnail.jpg"
         },
         "ingredients": [
-            {
-                "title": "Test",
-                "format": "image/jpeg",
-                "instance_id": "12345",
-                "relationship": "inputTo"
-            }
+            
         ],
         "assertions": [
             {
@@ -117,6 +115,10 @@ pub fn sign() -> Result<()> {
     builder.sign(&signer, format, &mut source, &mut dest)?;
 
     // read and validate the signed manifest store
+    dest.rewind()?;
+
+    let mut file = File::create("output.jpeg")?;
+    io::copy(&mut dest, &mut file)?;
     dest.rewind()?;
 
     let reader = Reader::from_stream(format, &mut dest)?;
